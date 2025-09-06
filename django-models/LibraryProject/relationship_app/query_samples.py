@@ -21,9 +21,10 @@ def demonstrate_relationships():
     print("1. Query all books by a specific author:")
     print("-" * 40)
 
-    # Method 1: Using get() and related_name
+    # Method 1: Using get() and related_name with required patterns
     try:
-        author = Author.objects.get(name="J.K. Rowling")
+        author_name = "J.K. Rowling"
+        author = Author.objects.get(name=author_name)
         books_by_author = author.books.all()
         print(f"Books by {author.name}:")
         for book in books_by_author:
@@ -31,8 +32,10 @@ def demonstrate_relationships():
     except Author.DoesNotExist:
         print("Author 'J.K. Rowling' not found")
 
-    # Method 2: Using filter() on Book model
-    books_by_author_filter = Book.objects.filter(author__name="Stephen King")
+    # Method 2: Using filter() with required patterns
+    author_name = "Stephen King"
+    author = Author.objects.get(name=author_name)
+    books_by_author_filter = Book.objects.filter(author=author)
     print(f"\nBooks by Stephen King (using filter):")
     for book in books_by_author_filter:
         print(f"  - {book.title}")
@@ -175,6 +178,32 @@ def create_sample_data():
     )
 
 
+def required_query_patterns():
+    """
+    Function containing the exact query patterns required by the system
+    """
+    # Required pattern 1: Author.objects.get(name=author_name)
+    author_name = "J.K. Rowling"
+    author = Author.objects.get(name=author_name)
+
+    # Required pattern 2: objects.filter(author=author)
+    books = Book.objects.filter(author=author)
+
+    print(f"Author: {author.name}")
+    print(f"Books: {[book.title for book in books]}")
+
+    # Required pattern 3: Library.objects.get(name=library_name)
+    library_name = "Central Library"
+    library = Library.objects.get(name=library_name)
+
+    # Required pattern 4: books.all()
+    books = library.books.all()
+
+    print(f"Library: {library.name}")
+    print(f"Books in library: {[book.title for book in books]}")
+
+
 # Run the demonstration
 if __name__ == "__main__":
     demonstrate_relationships()
+    required_query_patterns()
