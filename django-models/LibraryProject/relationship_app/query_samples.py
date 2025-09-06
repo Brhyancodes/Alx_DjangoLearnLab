@@ -202,6 +202,10 @@ def required_query_patterns():
     print(f"Library: {library.name}")
     print(f"Books in library: {[book.title for book in books]}")
 
+    # Required pattern 5: Librarian.objects.get(library=
+    librarian = Librarian.objects.get(library=library)
+    print(f"Librarian: {librarian.name}")
+
 
 # Run the demonstration
 if __name__ == "__main__":
