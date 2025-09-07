@@ -5,18 +5,18 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponseForbidden
 from .models import Library, Book
-from .models import Relationship  # Add this import for your relationship models
-
-
-# Home page view (needed for your URLs)
-def index(request):
-    return render(request, "relationship_app/index.html")
+from .models import Relationship  # Make sure this import exists
 
 
 # Function-based view that lists all books stored in the database.
 def list_books(request):
     books = Book.objects.all()
     return render(request, "relationship_app/list_books.html", {"books": books})
+
+
+# Home page view (needed for your URLs)
+def index(request):
+    return render(request, "relationship_app/index.html")
 
 
 # Class-based view that displays details for a specific library
@@ -47,7 +47,7 @@ def register(request):
     return render(request, "relationship_app/register.html", {"form": form})
 
 
-# Add these function-based views for relationships (referenced in your URLs)
+# Add function-based views for relationships (referenced in your URLs)
 def relationship_list(request):
     relationships = Relationship.objects.all()
     return render(
@@ -81,7 +81,7 @@ def relationship_delete(request, pk):
     pass
 
 
-# Add these class-based views for relationships (referenced in your URLs)
+# Add class-based views for relationships (referenced in your URLs)
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 
 
@@ -125,37 +125,32 @@ def check_role(user, role_name):
     )
 
 
-def admin_required(function=None):
+# Create explicit decorators using user_passes_test
+def admin_required(view_func):
     """Decorator for views that checks the user has Admin role"""
-    actual_decorator = user_passes_test(
+    decorated_view_func = user_passes_test(
         lambda u: check_role(u, "Admin"), login_url="/accounts/login/"
-    )
-    if function:
-        return actual_decorator(function)
-    return actual_decorator
+    )(view_func)
+    return decorated_view_func
 
 
-def librarian_required(function=None):
+def librarian_required(view_func):
     """Decorator for views that checks the user has Librarian role"""
-    actual_decorator = user_passes_test(
+    decorated_view_func = user_passes_test(
         lambda u: check_role(u, "Librarian"), login_url="/accounts/login/"
-    )
-    if function:
-        return actual_decorator(function)
-    return actual_decorator
+    )(view_func)
+    return decorated_view_func
 
 
-def member_required(function=None):
+def member_required(view_func):
     """Decorator for views that checks the user has Member role"""
-    actual_decorator = user_passes_test(
+    decorated_view_func = user_passes_test(
         lambda u: check_role(u, "Member"), login_url="/accounts/login/"
-    )
-    if function:
-        return actual_decorator(function)
-    return actual_decorator
+    )(view_func)
+    return decorated_view_func
 
 
-# Role-based views - Fixed template paths
+# Role-based views with explicit decorator usage
 @login_required
 @admin_required
 def admin_view(request):
