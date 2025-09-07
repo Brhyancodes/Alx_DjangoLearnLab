@@ -1,11 +1,8 @@
 from django.shortcuts import render, redirect
 from django.views.generic.detail import DetailView
 from django.contrib.auth import login
-from django.contrib.auth.decorators import (
-    login_required,
-    user_passes_test,
-    permission_required,
-)
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponseForbidden
@@ -55,7 +52,6 @@ def register(request):
 
 
 # BOOK MANAGEMENT VIEWS WITH PERMISSIONS
-
 
 # Function-based view for adding books (protected with permission)
 @login_required
@@ -108,7 +104,6 @@ def delete_book(request, pk):
 
 
 # CLASS-BASED VIEWS FOR BOOKS WITH PERMISSIONS
-
 
 class BookCreateView(PermissionRequiredMixin, CreateView):
     model = Book
