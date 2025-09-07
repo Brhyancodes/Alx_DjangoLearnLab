@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 from .views import (
+    list_books,
+    LibraryDetailView,
     RelationshipListView,
     RelationshipDetailView,
     RelationshipCreateView,
@@ -13,6 +15,7 @@ app_name = "relationship"
 urlpatterns = [
     # Function-based views
     path("", views.index, name="index"),  # Home page
+    path("books/", list_books, name="list_books"),  # Books list view
     path(
         "list-fbv/", views.relationship_list, name="relationship_list_fbv"
     ),  # List view (function-based)
@@ -35,6 +38,9 @@ urlpatterns = [
         name="relationship_delete_fbv",
     ),  # Delete view (function-based)
     # Class-based views
+    path(
+        "library/<int:pk>/", LibraryDetailView.as_view(), name="library_detail"
+    ),  # Library detail view
     path(
         "list/", RelationshipListView.as_view(), name="relationship_list"
     ),  # List view (class-based)
