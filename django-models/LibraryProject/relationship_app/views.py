@@ -6,6 +6,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponseForbidden
 from .models import Library, Book
 from .models import Relationship  # Make sure this import exists
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 
 
 # Function-based view that lists all books stored in the database.
@@ -82,9 +83,6 @@ def relationship_delete(request, pk):
 
 
 # Add class-based views for relationships (referenced in your URLs)
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-
-
 class RelationshipListView(ListView):
     model = Relationship
     template_name = "relationship_app/relationship_list.html"
@@ -115,7 +113,7 @@ class RelationshipDeleteView(DeleteView):
     success_url = "/"  # Update with your success URL
 
 
-# Role-based access control functions
+# Role-based access control function
 def check_role(user, role_name):
     """Check if user has the specified role"""
     return (
@@ -125,45 +123,20 @@ def check_role(user, role_name):
     )
 
 
-# Create explicit decorators using user_passes_test
-def admin_required(view_func):
-    """Decorator for views that checks the user has Admin role"""
-    decorated_view_func = user_passes_test(
-        lambda u: check_role(u, "Admin"), login_url="/accounts/login/"
-    )(view_func)
-    return decorated_view_func
-
-
-def librarian_required(view_func):
-    """Decorator for views that checks the user has Librarian role"""
-    decorated_view_func = user_passes_test(
-        lambda u: check_role(u, "Librarian"), login_url="/accounts/login/"
-    )(view_func)
-    return decorated_view_func
-
-
-def member_required(view_func):
-    """Decorator for views that checks the user has Member role"""
-    decorated_view_func = user_passes_test(
-        lambda u: check_role(u, "Member"), login_url="/accounts/login/"
-    )(view_func)
-    return decorated_view_func
-
-
-# Role-based views with explicit decorator usage
+# Role-based views with explicit user_passes_test usage
 @login_required
-@admin_required
+@user_passes_test(lambda u: check_role(u, "Admin"))
 def admin_view(request):
     return render(request, "relationship_app/admin_view.html")
 
 
 @login_required
-@librarian_required
+@user_passes_test(lambda u: check_role(u, "Librarian"))
 def librarian_view(request):
     return render(request, "relationship_app/librarian_view.html")
 
 
 @login_required
-@member_required
+@user_passes_test(lambda u: check_role(u, "Member"))
 def member_view(request):
     return render(request, "relationship_app/member_view.html")
