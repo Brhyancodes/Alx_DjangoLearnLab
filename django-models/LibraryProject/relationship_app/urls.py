@@ -7,6 +7,9 @@ from .views import (
     RelationshipCreateView,
     RelationshipUpdateView,
     RelationshipDeleteView,
+    BookCreateView,
+    BookUpdateView,
+    BookDeleteView,
 )
 from django.contrib.auth import views as auth_views
 
@@ -37,6 +40,26 @@ urlpatterns = [
         views.relationship_delete,
         name="relationship_delete_fbv",
     ),  # Delete view (function-based)
+    # SECURED BOOK MANAGEMENT URLs - Function-based views
+    path(
+        "books/add/", views.add_book, name="add_book"
+    ),  # Add book (requires can_add_book permission)
+    path(
+        "books/edit/<int:pk>/", views.edit_book, name="edit_book"
+    ),  # Edit book (requires can_change_book permission)
+    path(
+        "books/delete/<int:pk>/", views.delete_book, name="delete_book"
+    ),  # Delete book (requires can_delete_book permission)
+    # SECURED BOOK MANAGEMENT URLs - Class-based views (alternative)
+    path(
+        "books/create/", BookCreateView.as_view(), name="book_create"
+    ),  # Create book (CBV with permission)
+    path(
+        "books/update/<int:pk>/", BookUpdateView.as_view(), name="book_update"
+    ),  # Update book (CBV with permission)
+    path(
+        "books/remove/<int:pk>/", BookDeleteView.as_view(), name="book_delete_cbv"
+    ),  # Delete book (CBV with permission)
     # Authentication URLs
     path(
         "login/",

@@ -1,9 +1,15 @@
 from django.shortcuts import render, redirect
 from django.views.generic.detail import DetailView
 from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import (
+    login_required,
+    user_passes_test,
+    permission_required,
+)
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponseForbidden
+from django.urls import reverse_lazy
 from .models import Library, Book
 from .models import Relationship  # Make sure this import exists
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
@@ -46,6 +52,85 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, "relationship_app/register.html", {"form": form})
+
+
+# BOOK MANAGEMENT VIEWS WITH PERMISSIONS
+
+
+# Function-based view for adding books (protected with permission)
+@login_required
+@permission_required("relationship_app.can_add_book", raise_exception=True)
+def add_book(request):
+    if request.method == "POST":
+        # Add your form handling logic here
+        # Example: form = BookForm(request.POST)
+        # if form.is_valid():
+        #     form.save()
+        #     return redirect('book_list')
+        pass
+    return render(request, "relationship_app/add_book.html")
+
+
+# Function-based view for editing books (protected with permission)
+@login_required
+@permission_required("relationship_app.can_change_book", raise_exception=True)
+def edit_book(request, pk):
+    try:
+        book = Book.objects.get(pk=pk)
+    except Book.DoesNotExist:
+        return HttpResponseForbidden("Book not found")
+
+    if request.method == "POST":
+        # Add your form handling logic here
+        # Example: form = BookForm(request.POST, instance=book)
+        # if form.is_valid():
+        #     form.save()
+        #     return redirect('book_detail', pk=book.pk)
+        pass
+
+    return render(request, "relationship_app/edit_book.html", {"book": book})
+
+
+# Function-based view for deleting books (protected with permission)
+@login_required
+@permission_required("relationship_app.can_delete_book", raise_exception=True)
+def delete_book(request, pk):
+    try:
+        book = Book.objects.get(pk=pk)
+    except Book.DoesNotExist:
+        return HttpResponseForbidden("Book not found")
+
+    if request.method == "POST":
+        book.delete()
+        return redirect("list_books")  # Redirect to book list after deletion
+
+    return render(request, "relationship_app/delete_book.html", {"book": book})
+
+
+# CLASS-BASED VIEWS FOR BOOKS WITH PERMISSIONS
+
+
+class BookCreateView(PermissionRequiredMixin, CreateView):
+    model = Book
+    template_name = "relationship_app/book_form.html"
+    fields = ["title", "author"]
+    permission_required = "relationship_app.can_add_book"
+    success_url = reverse_lazy("list_books")
+
+
+class BookUpdateView(PermissionRequiredMixin, UpdateView):
+    model = Book
+    template_name = "relationship_app/book_form.html"
+    fields = ["title", "author"]
+    permission_required = "relationship_app.can_change_book"
+    success_url = reverse_lazy("list_books")
+
+
+class BookDeleteView(PermissionRequiredMixin, DeleteView):
+    model = Book
+    template_name = "relationship_app/book_confirm_delete.html"
+    permission_required = "relationship_app.can_delete_book"
+    success_url = reverse_lazy("list_books")
 
 
 # Add function-based views for relationships (referenced in your URLs)
