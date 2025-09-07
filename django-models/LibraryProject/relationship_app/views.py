@@ -20,3 +20,18 @@ class LibraryDetailView(DetailView):
         # Add all books available in this library to the context
         context["books"] = self.object.books.all()
         return context
+
+
+# Registration view for user authentication
+def register(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect(
+                "relationship:index"
+            )  # Redirect to home page after registration
+    else:
+        form = UserCreationForm()
+    return render(request, "relationship_app/register.html", {"form": form})
