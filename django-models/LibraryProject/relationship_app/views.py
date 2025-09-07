@@ -5,6 +5,12 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponseForbidden
 from .models import Library, Book
+from .models import Relationship  # Add this import for your relationship models
+
+
+# Home page view (needed for your URLs)
+def index(request):
+    return render(request, "relationship_app/index.html")
 
 
 # Function-based view that lists all books stored in the database.
@@ -39,6 +45,74 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, "relationship_app/register.html", {"form": form})
+
+
+# Add these function-based views for relationships (referenced in your URLs)
+def relationship_list(request):
+    relationships = Relationship.objects.all()
+    return render(
+        request,
+        "relationship_app/relationship_list.html",
+        {"relationships": relationships},
+    )
+
+
+def relationship_detail(request, pk):
+    relationship = Relationship.objects.get(pk=pk)
+    return render(
+        request,
+        "relationship_app/relationship_detail.html",
+        {"relationship": relationship},
+    )
+
+
+def relationship_create(request):
+    # Add your implementation for relationship creation
+    pass
+
+
+def relationship_update(request, pk):
+    # Add your implementation for relationship update
+    pass
+
+
+def relationship_delete(request, pk):
+    # Add your implementation for relationship deletion
+    pass
+
+
+# Add these class-based views for relationships (referenced in your URLs)
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+
+
+class RelationshipListView(ListView):
+    model = Relationship
+    template_name = "relationship_app/relationship_list.html"
+    context_object_name = "relationships"
+
+
+class RelationshipDetailView(DetailView):
+    model = Relationship
+    template_name = "relationship_app/relationship_detail.html"
+    context_object_name = "relationship"
+
+
+class RelationshipCreateView(CreateView):
+    model = Relationship
+    template_name = "relationship_app/relationship_form.html"
+    # Add your form fields here
+
+
+class RelationshipUpdateView(UpdateView):
+    model = Relationship
+    template_name = "relationship_app/relationship_form.html"
+    # Add your form fields here
+
+
+class RelationshipDeleteView(DeleteView):
+    model = Relationship
+    template_name = "relationship_app/relationship_confirm_delete.html"
+    success_url = "/"  # Update with your success URL
 
 
 # Role-based access control functions
@@ -81,20 +155,20 @@ def member_required(function=None):
     return actual_decorator
 
 
-# Role-based views
+# Role-based views - Fixed template paths
 @login_required
 @admin_required
 def admin_view(request):
-    return render(request, "admin_view.html")
+    return render(request, "relationship_app/admin_view.html")
 
 
 @login_required
 @librarian_required
 def librarian_view(request):
-    return render(request, "librarian_view.html")
+    return render(request, "relationship_app/librarian_view.html")
 
 
 @login_required
 @member_required
 def member_view(request):
-    return render(request, "member_view.html")
+    return render(request, "relationship_app/member_view.html")
