@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.views.generic.detail import DetailView
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
+from django.http import HttpResponseForbidden
 from .models import Library, Book
 
 
@@ -37,3 +39,62 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, "relationship_app/register.html", {"form": form})
+
+
+# Role-based access control functions
+def check_role(user, role_name):
+    """Check if user has the specified role"""
+    return (
+        user.is_authenticated
+        and hasattr(user, "userprofile")
+        and user.userprofile.role == role_name
+    )
+
+
+def admin_required(function=None):
+    """Decorator for views that checks the user has Admin role"""
+    actual_decorator = user_passes_test(
+        lambda u: check_role(u, "Admin"), login_url="/accounts/login/"
+    )
+    if function:
+        return actual_decorator(function)
+    return actual_decorator
+
+
+def librarian_required(function=None):
+    """Decorator for views that checks the user has Librarian role"""
+    actual_decorator = user_passes_test(
+        lambda u: check_role(u, "Librarian"), login_url="/accounts/login/"
+    )
+    if function:
+        return actual_decorator(function)
+    return actual_decorator
+
+
+def member_required(function=None):
+    """Decorator for views that checks the user has Member role"""
+    actual_decorator = user_passes_test(
+        lambda u: check_role(u, "Member"), login_url="/accounts/login/"
+    )
+    if function:
+        return actual_decorator(function)
+    return actual_decorator
+
+
+# Role-based views
+@login_required
+@admin_required
+def admin_view(request):
+    return render(request, "admin_view.html")
+
+
+@login_required
+@librarian_required
+def librarian_view(request):
+    return render(request, "librarian_view.html")
+
+
+@login_required
+@member_required
+def member_view(request):
+    return render(request, "member_view.html")
