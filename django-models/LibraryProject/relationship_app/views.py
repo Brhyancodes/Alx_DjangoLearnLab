@@ -6,7 +6,7 @@ def list_books(request):
     from .models import Book
 
     books = Book.objects.all()
-    return render(request, "relationship_app/book_list.html", {"books": books})
+    return render(request, "relationship_app/list_books.html", {"books": books})
 
 
 # Class-based view that displays details for a specific library
