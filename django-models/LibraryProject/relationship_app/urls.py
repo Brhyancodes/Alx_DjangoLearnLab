@@ -8,6 +8,7 @@ from .views import (
     RelationshipUpdateView,
     RelationshipDeleteView,
 )
+from django.contrib.auth import views as auth_views
 
 app_name = "relationship"
 
@@ -36,6 +37,23 @@ urlpatterns = [
         views.relationship_delete,
         name="relationship_delete_fbv",
     ),  # Delete view (function-based)
+    # Authentication URLs
+    path(
+        "login/",
+        auth_views.LoginView.as_view(template_name="relationship_app/login.html"),
+        name="login",
+    ),
+    path(
+        "logout/",
+        auth_views.LogoutView.as_view(template_name="relationship_app/logout.html"),
+        name="logout",
+    ),
+    path(
+        "register/",
+        views.register,
+        template_name="relationship_app/register.html",
+        name="register",
+    ),
     # Class-based views
     path(
         "library/<int:pk>/", LibraryDetailView.as_view(), name="library_detail"
