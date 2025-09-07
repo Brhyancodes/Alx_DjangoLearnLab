@@ -42,11 +42,15 @@ urlpatterns = [
     ),  # Delete view (function-based)
     # SECURED BOOK MANAGEMENT URLs - Function-based views
     path(
-        "books/add/", views.add_book, name="add_book"
+        "add_book/", views.add_book, name="add_book"
     ),  # Add book (requires can_add_book permission)
     path(
-        "books/edit/<int:pk>/", views.edit_book, name="edit_book"
+        "edit_book/<int:pk>/", views.edit_book, name="edit_book"
     ),  # Edit book (requires can_change_book permission)
+    path("books/add/", views.add_book, name="add_book_alt"),  # Alternative add book URL
+    path(
+        "books/edit/<int:pk>/", views.edit_book, name="edit_book_alt"
+    ),  # Alternative edit book URL
     path(
         "books/delete/<int:pk>/", views.delete_book, name="delete_book"
     ),  # Delete book (requires can_delete_book permission)
