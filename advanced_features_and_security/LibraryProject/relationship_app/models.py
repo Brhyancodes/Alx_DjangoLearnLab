@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -42,15 +42,22 @@ class CustomUserManager(BaseUserManager):
             username, email, password, date_of_birth, **extra_fields
         )
 
-# Customer User Model extending Abstract User
+
+# Custom User Model extending AbstractUser
 class CustomUser(AbstractUser):
     date_of_birth = models.DateField(null=True, blank=True)
     profile_photo = models.ImageField(
         upload_to="profile_photos/", null=True, blank=True
     )
 
+    objects = CustomUserManager()  # Assign the custom manager
+
     def __str__(self):
         return self.username
+
+
+class Author(models.Model):
+    name = models.CharField(max_length=100)
 
     def __str__(self):  # makes admin interface nicer
         return self.name
@@ -94,21 +101,25 @@ class UserProfile(models.Model):
         ("Member", "Member"),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # Now reference CustomUser instead of User
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="Member")
 
     def __str__(self):
         return f"{self.user.username} - {self.role}"
 
 
-# Signal to create UserProfile when User is created
-@receiver(post_save, sender=User)
+# Signal to create UserProfile when CustomUser is created
+@receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
 
 
-# Signal to save UserProfile when User is saved
-@receiver(post_save, sender=User)
+# Signal to save UserProfile when CustomUser is saved
+@receiver(post_save, sender=CustomUser)
 def save_user_profile(sender, instance, **kwargs):
-    instance.userprofile.save()
+    if hasattr(instance, "userprofile"):
+        instance.userprofile.save()
+    else:
+        UserProfile.objects.create(user=instance)
