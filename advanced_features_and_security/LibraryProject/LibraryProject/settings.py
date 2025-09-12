@@ -83,7 +83,8 @@ DATABASES = {
 
 # Custom User Model
 # Specify which app contains your CustomUser model
-AUTH_USER_MODEL = "relationship_app.CustomUser"
+# AUTH_USER_MODEL = "relationship_app.CustomUser"
+AUTH_USER_MODEL = "bookshelf.CustomUser"
 
 
 # Password validation
