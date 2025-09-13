@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import permission_required, login_required
 from django.views.decorators.http import require_POST
 from .models import Book
-from .forms import BookForm, ExampleForm  # ✅ added ExampleForm
+from .forms import ExampleForm
 
 # ============================
 # BOOK CRUD VIEWS (with permissions)
