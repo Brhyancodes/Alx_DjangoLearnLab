@@ -1,0 +1,29 @@
+{% extends "base.html" %} {% block content %}
+<h1>Books</h1>
+
+{% if perms.bookshelf.can_create %}
+<a href="{% url 'bookshelf:book_add' %}">Add Book</a>
+{% endif %}
+
+<ul>
+  {% for book in books %}
+  <li>
+    {{ book.title|escape }} — {{ book.author|escape }} ({{ book.publication_year
+    }}) {% if perms.bookshelf.can_edit %}
+    <a href="{% url 'bookshelf:book_edit' book.pk %}">Edit</a>
+    {% endif %} {% if perms.bookshelf.can_delete %}
+    <form
+      method="post"
+      action="{% url 'bookshelf:book_delete' book.pk %}"
+      style="display: inline"
+    >
+      {% csrf_token %}
+      <button type="submit">Delete</button>
+    </form>
+    {% endif %}
+  </li>
+  {% empty %}
+  <li>No books yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

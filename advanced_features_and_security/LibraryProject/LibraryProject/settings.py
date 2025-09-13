@@ -10,26 +10,28 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# --------------------------------------------------------------------
+# SECURITY: Environment-based settings (use env vars in production)
+# --------------------------------------------------------------------
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# Secret key
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key-do-not-use-in-prod")
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-@z9_joy7+s=bls6oq2+8fso$q3yb+)!u9ip++40k^)=5flz547"
+# Debug mode
+DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Allowed hosts
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
-ALLOWED_HOSTS = []
-
-
+# --------------------------------------------------------------------
 # Application definition
-
+# --------------------------------------------------------------------
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -43,12 +45,16 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Optional CSP middleware (if django-csp is installed)
+    # "csp.middleware.CSPMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Optional custom CSP middleware
+    # "LibraryProject.middleware.ContentSecurityPolicyMiddleware",
 ]
 
 ROOT_URLCONF = "LibraryProject.urls"
@@ -70,10 +76,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "LibraryProject.wsgi.application"
 
-
+# --------------------------------------------------------------------
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# --------------------------------------------------------------------
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -81,49 +86,77 @@ DATABASES = {
     }
 }
 
-# Custom User Model
-# Specify which app contains your CustomUser model
-# AUTH_USER_MODEL = "relationship_app.CustomUser"
+# --------------------------------------------------------------------
+# Authentication
+# --------------------------------------------------------------------
 AUTH_USER_MODEL = "bookshelf.CustomUser"
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-
+# --------------------------------------------------------------------
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
+# --------------------------------------------------------------------
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
+# --------------------------------------------------------------------
+# Static files
+# --------------------------------------------------------------------
 STATIC_URL = "static/"
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --------------------------------------------------------------------
+# Security Headers & Cookies
+# --------------------------------------------------------------------
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+
+# Cookies - only secure in production (when HTTPS is enabled)
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
+# HSTS (only use in production)
+SECURE_HSTS_SECONDS = (
+    0 if DEBUG else int(os.environ.get("SECURE_HSTS_SECONDS", "31536000"))
+)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = (
+    False
+    if DEBUG
+    else os.environ.get("SECURE_HSTS_INCLUDE_SUBDOMAINS", "True") == "True"
+)
+SECURE_HSTS_PRELOAD = (
+    False if DEBUG else os.environ.get("SECURE_HSTS_PRELOAD", "True") == "True"
+)
+
+# Optional: redirect all HTTP to HTTPS in production
+SECURE_SSL_REDIRECT = (
+    False if DEBUG else os.environ.get("SECURE_SSL_REDIRECT", "True") == "True"
+)
+
+# If behind a reverse proxy (e.g., Heroku/Nginx):
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# --------------------------------------------------------------------
+# Content Security Policy (CSP) - requires django-csp or custom middleware
+# --------------------------------------------------------------------
+# Example if using django-csp:
+# CSP_DEFAULT_SRC = ("'self'",)
+# CSP_SCRIPT_SRC = ("'self'", "https://cdnjs.cloudflare.com")
+# CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")
+# CSP_IMG_SRC = ("'self'", "data:")
+# CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
