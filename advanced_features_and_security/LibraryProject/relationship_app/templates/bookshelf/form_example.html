@@ -1,11 +1,23 @@
 {% extends "base.html" %} {% block content %}
 <h1>{{ title }}</h1>
+
 <form method="post" enctype="multipart/form-data">
-  {% csrf_token %} {{ form.non_field_errors }}
-  <div>{{ form.title.label_tag }} {{ form.title }} {{ form.title.errors }}</div>
+  {% csrf_token %}
+
+  <!-- Display any form-wide (non-field) errors -->
+  {{ form.non_field_errors }}
+
+  <!-- Loop through all form fields -->
+  {% for field in form %}
   <div>
-    {{ form.author.label_tag }} {{ form.author }} {{ form.author.errors }}
+    {{ field.label_tag }} {{ field }}
+    <!-- Show validation errors for each field -->
+    {% for error in field.errors %}
+    <p style="color: red">{{ error }}</p>
+    {% endfor %}
   </div>
+  {% endfor %}
+
   <button type="submit">Save</button>
 </form>
 {% endblock %}
