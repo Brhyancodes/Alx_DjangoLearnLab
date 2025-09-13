@@ -14,6 +14,7 @@ class ExampleForm(forms.Form):
       - author (required)
       - publication_year (optional)
     """
+
     title = forms.CharField(max_length=200, required=True)
     author = forms.CharField(max_length=100, required=True)
     publication_year = forms.IntegerField(required=False, min_value=0)
@@ -30,6 +31,7 @@ class BookForm(forms.ModelForm):
     """
     ModelForm to create/edit Book instances. Validates input and prevents raw SQL usage.
     """
+
     class Meta:
         model = Book
         fields = ["title", "author", "publication_year"]
@@ -47,6 +49,7 @@ class CustomUserCreationForm(UserCreationForm):
     """
     Creation form for CustomUser.
     """
+
     class Meta(UserCreationForm.Meta):
         model = CustomUser
         fields = ("username", "email", "date_of_birth", "profile_photo")
@@ -56,6 +59,7 @@ class CustomUserChangeForm(UserChangeForm):
     """
     Form for updating CustomUser.
     """
+
     class Meta:
         model = CustomUser
         fields = ("username", "email", "date_of_birth", "profile_photo")
