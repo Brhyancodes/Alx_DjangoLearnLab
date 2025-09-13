@@ -4,14 +4,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
-# Custom User Manager
+# --- Custom User Manager ---
 class CustomUserManager(BaseUserManager):
     def create_user(
         self, username, email=None, password=None, date_of_birth=None, **extra_fields
     ):
-        """
-        Create and return a regular user with an email and password.
-        """
         if not username:
             raise ValueError("The Username field must be set")
 
@@ -26,9 +23,6 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(
         self, username, email=None, password=None, date_of_birth=None, **extra_fields
     ):
-        """
-        Create and return a superuser with an email and password.
-        """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
@@ -43,34 +37,45 @@ class CustomUserManager(BaseUserManager):
         )
 
 
-# Custom User Model extending AbstractUser
+# --- Custom User Model ---
 class CustomUser(AbstractUser):
     date_of_birth = models.DateField(null=True, blank=True)
     profile_photo = models.ImageField(
         upload_to="profile_photos/", null=True, blank=True
     )
 
-    objects = CustomUserManager()  # Assign the custom manager
+    objects = CustomUserManager()
 
     def __str__(self):
         return self.username
 
 
+# --- Author model (with permissions) ---
 class Author(models.Model):
     name = models.CharField(max_length=100)
 
-    def __str__(self):  # makes admin interface nicer
+    class Meta:
+        permissions = [
+            ("can_view_author", "Can view author"),
+            ("can_create_author", "Can create author"),
+            ("can_edit_author", "Can edit author"),
+            ("can_delete_author", "Can delete author"),
+        ]
+
+    def __str__(self):
         return self.name
 
 
+# --- Book model (already had these — kept them) ---
 class Book(models.Model):
     title = models.CharField(max_length=200)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
 
     class Meta:
         permissions = [
-            ("can_add_book", "Can add book"),
-            ("can_change_book", "Can change book"),
+            ("can_view_book", "Can view book"),
+            ("can_create_book", "Can create book"),
+            ("can_edit_book", "Can edit book"),
             ("can_delete_book", "Can delete book"),
         ]
 
@@ -78,14 +83,24 @@ class Book(models.Model):
         return self.title
 
 
+# --- Library model (with permissions) ---
 class Library(models.Model):
     name = models.CharField(max_length=100)
     books = models.ManyToManyField(Book)
+
+    class Meta:
+        permissions = [
+            ("can_view_library", "Can view library"),
+            ("can_create_library", "Can create library"),
+            ("can_edit_library", "Can edit library"),
+            ("can_delete_library", "Can delete library"),
+        ]
 
     def __str__(self):
         return self.name
 
 
+# --- Librarian (simple) ---
 class Librarian(models.Model):
     name = models.CharField(max_length=100)
     library = models.OneToOneField(Library, on_delete=models.CASCADE)
@@ -94,6 +109,7 @@ class Librarian(models.Model):
         return self.name
 
 
+# --- UserProfile linking to CustomUser ---
 class UserProfile(models.Model):
     ROLE_CHOICES = [
         ("Admin", "Admin"),
@@ -101,7 +117,6 @@ class UserProfile(models.Model):
         ("Member", "Member"),
     ]
 
-    # Now reference CustomUser instead of User
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="Member")
 
@@ -109,14 +124,13 @@ class UserProfile(models.Model):
         return f"{self.user.username} - {self.role}"
 
 
-# Signal to create UserProfile when CustomUser is created
+# --- Signals to create/save UserProfile ---
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
 
 
-# Signal to save UserProfile when CustomUser is saved
 @receiver(post_save, sender=CustomUser)
 def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, "userprofile"):
