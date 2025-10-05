@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ post.title }}</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        background-color: #f4f4f4;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #007bff;
+        text-decoration: none;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+      h1 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 32px;
+      }
+      .post-meta {
+        color: #666;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #eee;
+      }
+      .post-content {
+        color: #333;
+        font-size: 18px;
+        line-height: 1.8;
+        margin-bottom: 30px;
+        white-space: pre-wrap;
+      }
+      .post-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid #eee;
+      }
+      .btn {
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+        display: inline-block;
+      }
+      .btn-primary {
+        background-color: #007bff;
+        color: white;
+      }
+      .btn-primary:hover {
+        background-color: #0056b3;
+      }
+      .btn-warning {
+        background-color: #ffc107;
+        color: #333;
+      }
+      .btn-warning:hover {
+        background-color: #e0a800;
+      }
+      .btn-danger {
+        background-color: #dc3545;
+        color: white;
+      }
+      .btn-danger:hover {
+        background-color: #c82333;
+      }
+      .messages {
+        margin-bottom: 20px;
+      }
+      .alert {
+        padding: 12px 20px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+      }
+      .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="{% url 'post-list' %}" class="back-link">← Back to All Posts</a>
+
+      {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <article>
+        <h1>{{ post.title }}</h1>
+        <div class="post-meta">
+          By <strong>{{ post.author.username }}</strong> | {{
+          post.published_date|date:"F d, Y at h:i A" }}
+        </div>
+        <div class="post-content">{{ post.content }}</div>
+      </article>
+
+      {% if user.is_authenticated and user == post.author %}
+      <div class="post-actions">
+        <a href="{% url 'post-update' post.pk %}" class="btn btn-warning"
+          >Edit Post</a
+        >
+        <a href="{% url 'post-delete' post.pk %}" class="btn btn-danger"
+          >Delete Post</a
+        >
+      </div>
+      {% endif %}
+    </div>
+  </body>
+</html>
