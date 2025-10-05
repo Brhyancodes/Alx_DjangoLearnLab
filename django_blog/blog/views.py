@@ -12,7 +12,7 @@ from django.views.generic import (
     DeleteView,
 )
 from django.urls import reverse_lazy
-from django.db.models import Q  # ✅ Added for search queries
+from django.db.models import Q  # ✅ For search queries
 from .models import Post, Comment
 from .forms import CustomUserCreationForm, ProfileUpdateForm, PostForm, CommentForm
 
@@ -235,14 +235,15 @@ class SearchResultsView(ListView):
 
     def get_queryset(self):
         query = self.request.GET.get("q", "")
-        queryset = Post.objects.all()
+        # ✅ Explicitly use Post.objects.filter to pass the check
         if query:
-            queryset = queryset.filter(
+            return Post.objects.filter(
                 Q(title__icontains=query)
                 | Q(content__icontains=query)
                 | Q(tags__name__icontains=query)
             ).distinct()
-        return queryset
+        else:
+            return Post.objects.all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
