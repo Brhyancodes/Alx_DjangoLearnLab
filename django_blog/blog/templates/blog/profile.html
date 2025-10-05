@@ -1,0 +1,136 @@
+{% extends 'blog/base.html' %} {% load static %} {% block content %}
+<div>
+  <div>
+    <div>
+      <div>
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Your Profile</h3>
+        </div>
+        <div class="card-body">
+          <!-- Username Display (non-editable) -->
+          <div class="mb-4">
+            <h5>Account Information</h5>
+            <hr />
+            <div class="form-group row">
+              <label class="col-sm-3 col-form-label">Username</label>
+              <div class="col-sm-9">
+                <input
+                  type="text"
+                  readonly
+                  class="form-control-plaintext"
+                  value="{{ user.username }}"
+                />
+              </div>
+
+              <label class="col-sm-3 col-form-label">First Name</label>
+              <div class="col-sm-9">
+                <input
+                  type="text"
+                  readonly
+                  class="form-control-plaintext"
+                  value="{{ user.first_name }}"
+                />
+              </div>
+
+              <label class="col-sm-3 col-form-label">Last Name</label>
+              <div class="col-sm-9">
+                <input
+                  type="text"
+                  readonly
+                  class="form-control-plaintext"
+                  value="{{ user.last_name }}"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Update Form -->
+          <form method="POST">
+            {% csrf_token %}
+
+            <h5>Personal Information</h5>
+            <hr />
+
+            <!-- Display form errors -->
+            {% if form.errors %}
+            <div class="alert alert-danger">
+              {% for field, errors in form.errors.items %} {% for error in
+              errors %}
+              <p>{{ field|title }}: {{ error }}</p>
+              {% endfor %} {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Email Field -->
+            <div class="form-group row mb-3">
+              <label
+                for="{{ form.email.id_for_label }}"
+                class="col-sm-3 col-form-label"
+                >Email</label
+              >
+              <div class="col-sm-9">
+                {{ form.email }} {% if form.email.errors %}
+                <div class="invalid-feedback d-block">
+                  {{ form.email.errors }}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Add any additional fields from your form here -->
+
+            <div class="form-group row mt-4">
+              <div class="col-sm-9 offset-sm-3">
+                <button type="submit" class="btn btn-primary">
+                  Update Profile
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Password Change Section -->
+          <h2 class="header">Your Blog Posts</h2>
+
+          {% if posts %}
+          <ul>
+            {% for post in posts %}
+            <article class="blog-post">
+              <h2>
+                <a href="{% url 'post_detail' post.pk %}">{{ post.title }}</a>
+              </h2>
+
+              <div class="meta">
+                <span class="author">By {{ post.author }}</span>
+                <span class="divider">•</span>
+                <span class="date">{{ post.created_at|date:"F j, Y" }}</span>
+              </div>
+
+              <p class="post-excerpt">{{ post.content|truncatewords:50 }}</p>
+
+              <a href="{% url 'post_detail' post.pk %}" class="read-more">
+                Continue Reading
+              </a>
+            </article>
+            {% empty %}
+            <div class="empty-state">
+              <p>No blog posts available yet. Check back soon!</p>
+              {% if user.is_authenticated %}
+              <a href="{% url 'post_create' %}" class="btn"
+                >Write Your First Post</a
+              >
+              {% endif %}
+            </div>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p>
+            No posts yet.
+            <a href="{% url 'post_create' %}">Write your first post!</a>
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
