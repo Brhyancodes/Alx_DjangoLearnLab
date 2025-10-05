@@ -31,7 +31,7 @@ urlpatterns = [
     ),
     # Search
     path("search/", views.SearchResultsView.as_view(), name="search-results"),
-    # Tag Filtering (must be exactly like this line for the checker)
+    # Tag Filtering (keep this one-liner EXACTLY like this)
     path(
         "tags/<slug:tag_slug>/", views.PostByTagListView.as_view(), name="posts-by-tag"
     ),
