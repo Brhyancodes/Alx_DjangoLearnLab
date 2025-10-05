@@ -12,6 +12,7 @@ from django.views.generic import (
     DeleteView,
 )
 from django.urls import reverse_lazy
+from django.db.models import Q  # ✅ Added for search queries
 from .models import Post, Comment
 from .forms import CustomUserCreationForm, ProfileUpdateForm, PostForm, CommentForm
 
@@ -81,10 +82,7 @@ def profile_view(request):
 
 
 class PostListView(ListView):
-    """
-    Display all blog posts - accessible to everyone.
-    Uses pagination to show 10 posts per page.
-    """
+    """Display all blog posts"""
 
     model = Post
     template_name = "blog/post_list.html"
@@ -92,15 +90,11 @@ class PostListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        """Return all posts ordered by published date (newest first)"""
         return Post.objects.all().order_by("-published_date")
 
 
 class PostDetailView(DetailView):
-    """
-    Display individual blog post - accessible to everyone.
-    Shows full post content and author information.
-    """
+    """Display individual blog post"""
 
     model = Post
     template_name = "blog/post_detail.html"
@@ -108,10 +102,7 @@ class PostDetailView(DetailView):
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
-    """
-    Allow authenticated users to create new posts.
-    Automatically sets the author to the current logged-in user.
-    """
+    """Create new post"""
 
     model = Post
     form_class = PostForm
@@ -119,13 +110,11 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("post-list")
 
     def form_valid(self, form):
-        """Set the author to the current logged-in user"""
         form.instance.author = self.request.user
         messages.success(self.request, "Your post has been created successfully!")
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
-        """Add context for template"""
         context = super().get_context_data(**kwargs)
         context["title"] = "Create New Post"
         context["button_text"] = "Create Post"
@@ -133,44 +122,33 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    """
-    Allow post authors to edit their posts.
-    Only the author of the post can access this view.
-    """
+    """Edit existing post"""
 
     model = Post
     form_class = PostForm
     template_name = "blog/post_form.html"
 
     def form_valid(self, form):
-        """Keep the original author when updating"""
         form.instance.author = self.request.user
         messages.success(self.request, "Your post has been updated successfully!")
         return super().form_valid(form)
 
     def test_func(self):
-        """Check if the current user is the author of the post"""
         post = self.get_object()
         return self.request.user == post.author
 
     def get_context_data(self, **kwargs):
-        """Add context for template"""
         context = super().get_context_data(**kwargs)
         context["title"] = "Edit Post"
         context["button_text"] = "Update Post"
         return context
 
     def get_success_url(self):
-        """Redirect to the post detail page after update"""
         return reverse_lazy("post-detail", kwargs={"pk": self.object.pk})
 
 
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    """
-    Allow post authors to delete their posts.
-    Only the author of the post can access this view.
-    Shows a confirmation page before deletion.
-    """
+    """Delete post"""
 
     model = Post
     template_name = "blog/post_confirm_delete.html"
@@ -178,31 +156,25 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     context_object_name = "post"
 
     def test_func(self):
-        """Check if the current user is the author of the post"""
         post = self.get_object()
         return self.request.user == post.author
 
     def delete(self, request, *args, **kwargs):
-        """Add success message when post is deleted"""
         messages.success(self.request, "Your post has been deleted successfully!")
         return super().delete(request, *args, **kwargs)
 
 
-# ==================== COMMENT CRUD VIEWS (class-based) ====================
+# ==================== COMMENT CRUD VIEWS ====================
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
-    """
-    Allow authenticated users to add comments to a post.
-    Expects `post_id` in the URL kwargs.
-    """
+    """Create comment on post"""
 
     model = Comment
     form_class = CommentForm
     template_name = "blog/add_comment.html"
 
     def form_valid(self, form):
-        # Attach the author and related post before saving
         form.instance.author = self.request.user
         post = get_object_or_404(Post, pk=self.kwargs.get("post_id"))
         form.instance.post = post
@@ -210,15 +182,11 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        # After saving, redirect to the post detail page
         return reverse_lazy("post-detail", kwargs={"pk": self.object.post.pk})
 
 
 class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    """
-    Allow comment authors to edit their comments.
-    Only the comment author may update.
-    """
+    """Edit comment"""
 
     model = Comment
     form_class = CommentForm
@@ -237,11 +205,7 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 
 class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    """
-    Allow comment authors to delete their comments.
-    Only the comment author may delete.
-    Shows a confirmation page before deletion.
-    """
+    """Delete comment"""
 
     model = Comment
     template_name = "blog/delete_comment.html"
@@ -252,9 +216,35 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return self.request.user == comment.author
 
     def delete(self, request, *args, **kwargs):
-        # Save post pk before deletion so we can redirect after removing the comment
         self.object = self.get_object()
         post_pk = self.object.post.pk
         self.object.delete()
         messages.success(self.request, "Your comment has been deleted successfully!")
         return redirect("post-detail", pk=post_pk)
+
+
+# ==================== SEARCH VIEW ====================
+
+
+class SearchResultsView(ListView):
+    """Search posts by title, content, or tags"""
+
+    model = Post
+    template_name = "blog/search_results.html"
+    context_object_name = "posts"
+
+    def get_queryset(self):
+        query = self.request.GET.get("q", "")
+        queryset = Post.objects.all()
+        if query:
+            queryset = queryset.filter(
+                Q(title__icontains=query)
+                | Q(content__icontains=query)
+                | Q(tags__name__icontains=query)
+            ).distinct()
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["query"] = self.request.GET.get("q", "")
+        return context

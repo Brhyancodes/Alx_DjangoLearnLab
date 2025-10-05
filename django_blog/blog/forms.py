@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Post, Comment
+from .models import Post, Comment, Tag  # <-- added Tag import
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -39,12 +39,24 @@ class ProfileUpdateForm(forms.ModelForm):
 class PostForm(forms.ModelForm):
     """
     Form for creating and updating blog posts.
-    Only includes title and content fields - author is set automatically.
+    Now includes a tags field for comma-separated tags.
     """
+
+    tags = forms.CharField(
+        required=False,
+        help_text="Enter comma-separated tags (e.g. Django, Python, Web)",
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Enter tags separated by commas",
+            }
+        ),
+        label="Tags",
+    )
 
     class Meta:
         model = Post
-        fields = ("title", "content")
+        fields = ("title", "content", "tags")
         widgets = {
             "title": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Enter post title"}
@@ -66,25 +78,24 @@ class PostForm(forms.ModelForm):
             "content": "Post Content",
         }
 
-    def clean_title(self):
-        """Validate that title is not empty or just whitespace"""
-        title = self.cleaned_data.get("title")
-        if title:
-            title = title.strip()
-            if not title:
-                raise forms.ValidationError("Title cannot be empty or just whitespace.")
-        return title
+    def save(self, commit=True, *args, **kwargs):
+        instance = super().save(commit=False, *args, **kwargs)
+        if commit:
+            instance.save()
 
-    def clean_content(self):
-        """Validate that content is not empty or just whitespace"""
-        content = self.cleaned_data.get("content")
-        if content:
-            content = content.strip()
-            if not content:
-                raise forms.ValidationError(
-                    "Content cannot be empty or just whitespace."
-                )
-        return content
+        # Tag handling logic
+        tag_input = self.cleaned_data.get("tags", "")
+        if tag_input:
+            tag_names = [t.strip() for t in tag_input.split(",") if t.strip()]
+            tag_objects = []
+            for name in tag_names:
+                tag_obj, _ = Tag.objects.get_or_create(name=name)
+                tag_objects.append(tag_obj)
+            instance.tags.set(tag_objects)
+        else:
+            instance.tags.clear()
+
+        return instance
 
 
 class CommentForm(forms.ModelForm):
