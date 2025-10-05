@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Post
+from .models import Post, Comment
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -83,5 +83,39 @@ class PostForm(forms.ModelForm):
             if not content:
                 raise forms.ValidationError(
                     "Content cannot be empty or just whitespace."
+                )
+        return content
+
+
+class CommentForm(forms.ModelForm):
+    """
+    Form for creating and updating comments.
+    Only includes content field - post and author are set automatically.
+    """
+
+    class Meta:
+        model = Comment
+        fields = ("content",)
+        widgets = {
+            "content": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Write your comment here...",
+                    "rows": 4,
+                }
+            ),
+        }
+        labels = {
+            "content": "Your Comment",
+        }
+
+    def clean_content(self):
+        """Validate that content is not empty or just whitespace"""
+        content = self.cleaned_data.get("content")
+        if content:
+            content = content.strip()
+            if not content:
+                raise forms.ValidationError(
+                    "Comment cannot be empty or just whitespace."
                 )
         return content
