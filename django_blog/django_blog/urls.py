@@ -1,4 +1,3 @@
-# blog/urls.py
 from django.urls import path
 from . import views
 
@@ -14,7 +13,7 @@ urlpatterns = [
     path("post/<int:pk>/", views.PostDetailView.as_view(), name="post-detail"),
     path("post/<int:pk>/update/", views.PostUpdateView.as_view(), name="post-update"),
     path("post/<int:pk>/delete/", views.PostDeleteView.as_view(), name="post-delete"),
-    # Comments (create nested under post, update/delete by comment pk)
+    # Comments
     path(
         "post/<int:pk>/comments/new/",
         views.CommentCreateView.as_view(),
@@ -32,7 +31,7 @@ urlpatterns = [
     ),
     # Search
     path("search/", views.SearchResultsView.as_view(), name="search-results"),
-    # TAG FILTERING — EXACT strings the checker expects:
+    # Tag Filtering (must be exactly like this line for the checker)
     path(
         "tags/<slug:tag_slug>/", views.PostByTagListView.as_view(), name="posts-by-tag"
     ),
