@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Post, Comment, Tag  # <-- added Tag import
+from taggit.forms import TagWidget  # ✅ <-- added import
+from .models import Post, Comment
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -31,28 +32,14 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ("username", "email", "first_name", "last_name")
-        help_texts = {
-            "username": "Required. 150 characters or fewer.",
-        }
+        help_texts = {"username": "Required. 150 characters or fewer."}
 
 
 class PostForm(forms.ModelForm):
     """
     Form for creating and updating blog posts.
-    Now includes a tags field for comma-separated tags.
+    Now properly integrates Taggit with TagWidget.
     """
-
-    tags = forms.CharField(
-        required=False,
-        help_text="Enter comma-separated tags (e.g. Django, Python, Web)",
-        widget=forms.TextInput(
-            attrs={
-                "class": "form-control",
-                "placeholder": "Enter tags separated by commas",
-            }
-        ),
-        label="Tags",
-    )
 
     class Meta:
         model = Post
@@ -68,41 +55,27 @@ class PostForm(forms.ModelForm):
                     "rows": 10,
                 }
             ),
+            "tags": TagWidget(  # ✅ <-- Official Taggit widget
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Add tags separated by commas",
+                }
+            ),
         }
         help_texts = {
             "title": "Max 200 characters",
             "content": "Write your blog post content",
+            "tags": "Add descriptive tags separated by commas.",
         }
         labels = {
             "title": "Post Title",
             "content": "Post Content",
+            "tags": "Tags",
         }
-
-    def save(self, commit=True, *args, **kwargs):
-        instance = super().save(commit=False, *args, **kwargs)
-        if commit:
-            instance.save()
-
-        # Tag handling logic
-        tag_input = self.cleaned_data.get("tags", "")
-        if tag_input:
-            tag_names = [t.strip() for t in tag_input.split(",") if t.strip()]
-            tag_objects = []
-            for name in tag_names:
-                tag_obj, _ = Tag.objects.get_or_create(name=name)
-                tag_objects.append(tag_obj)
-            instance.tags.set(tag_objects)
-        else:
-            instance.tags.clear()
-
-        return instance
 
 
 class CommentForm(forms.ModelForm):
-    """
-    Form for creating and updating comments.
-    Only includes content field - post and author are set automatically.
-    """
+    """Form for creating and updating comments."""
 
     class Meta:
         model = Comment
@@ -116,9 +89,7 @@ class CommentForm(forms.ModelForm):
                 }
             ),
         }
-        labels = {
-            "content": "Your Comment",
-        }
+        labels = {"content": "Your Comment"}
 
     def clean_content(self):
         """Validate that content is not empty or just whitespace"""
