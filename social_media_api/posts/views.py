@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, filters, status
+from rest_framework import viewsets, permissions, filters, status, generics
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -85,17 +85,16 @@ def feed_view(request):
 @permission_classes([permissions.IsAuthenticated])
 def like_post(request, pk):
     """Like a post"""
-    post = get_object_or_404(Post, pk=pk)
+    post = generics.get_object_or_404(Post, pk=pk)
 
-    # Check if user already liked the post
-    if Like.objects.filter(user=request.user, post=post).exists():
+    # Use get_or_create to handle liking
+    like, created = Like.objects.get_or_create(user=request.user, post=post)
+
+    if not created:
         return Response(
             {"error": "You have already liked this post"},
             status=status.HTTP_400_BAD_REQUEST,
         )
-
-    # Create the like
-    like = Like.objects.create(user=request.user, post=post)
 
     # Create notification for post author
     from notifications.models import Notification
@@ -117,7 +116,7 @@ def like_post(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 def unlike_post(request, pk):
     """Unlike a post"""
-    post = get_object_or_404(Post, pk=pk)
+    post = generics.get_object_or_404(Post, pk=pk)
 
     # Check if like exists
     try:
