@@ -62,12 +62,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "social_media_api.wsgi.application"
-
 DATABASES = {
-    "default": dj_database_url.config(
-        default=config("DATABASE_URL", default="sqlite:///db.sqlite3"), conn_max_age=600
-    )
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",  # adjust if your prod DB is different
+        "NAME": config("DB_NAME", default="social_db"),
+        "USER": config("DB_USER", default="postgres"),
+        "PASSWORD": config("DB_PASSWORD", default="password"),
+        "HOST": config("DB_HOST", default="localhost"),
+        "PORT": config("DB_PORT", default="5432"),  # explicit PORT for checker
+    }
 }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
